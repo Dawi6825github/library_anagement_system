@@ -1,0 +1,48 @@
+Challenge: Develop a Simple Library Management System with Custom API Using Frappe Framework
+Create a basic library management system with a custom API using the Frappe framework. This system will manage books, members, and loans in a library. The goal is to assess your ability to build a full-stack application with Frappe and demonstrate your understanding of API development, integration, and front-end implementation capability.
+Core Features:
+Book Management:
+Create a DocType Book with fields like Title, Author, Publish Date, and ISBN.
+Implement CRUD operations for books.
+Membership Management:
+Create a DocType Member with fields like Name, Membership ID, Email, and Phone Number.
+Implement CRUD operations for members.
+Loan Management:
+Create a DocType Loan for tracking book loans.
+Include Member, Book, Loan Date, and Return Date fields.
+Add functionality to check the availability of books for loan.
+User Interface:
+Develop flexible forms for data entry and display.
+Include necessary validation checks.
+Reports:
+Create a report for all currently loaned books.
+Generate a report for overdue books.
+Custom API Development:
+Develop a REST API that allows external applications to interact with your library system.
+The API should support operations like adding, retrieving, updating, and deleting books and members.
+Ensure the API includes authentication to secure access.
+Front End:
+Develop a user login interface that requires users to log in using their email/username and password.
+Once logged in, provide an interface to:
+Display a list of available library books.
+Show details of each book.
+Allow users to loan a book.
+Advanced Features:
+Automated email reminders for overdue books.
+Feature for members to reserve books.
+User authentication and roles management (admin, librarian, member).
+Setup and Demonstration:
+The application must be developed using the Frappe Framework.
+Your code should be clean, well-commented, and adhere to best practices.
+Create and publish your custom Frappe App code to a public GitHub repo with a README file with instructions for setting up and running the application. Do not publish the entire Frappe Framework or other apps.
+You have two options for the demo setup:
+A. Deploy your application on a free hosting service and provide the URL.
+B. Set up the application on your laptop for an in-office demonstration.
+Evaluation Criteria:
+Functionality and implementation of required features.
+Quality and organization of the code.
+Effectiveness of the custom API.
+UI design and ease of use.
+Adherence to Frappe framework standards and best practices.
+Next Steps:
+Once your application is ready, call our office for a live demonstration.
