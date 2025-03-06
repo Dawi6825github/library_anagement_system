@@ -1,0 +1,223 @@
+import { useState } from "react";
+import { Layout } from "@/components/layout";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Book, Member, Loan, insertLoanSchema } from "@shared/schema";
+import { Button } from "@/components/ui/button";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { Plus, CheckCircle } from "lucide-react";
+import { format } from "date-fns";
+
+export default function Loans() {
+  const { toast } = useToast();
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+
+  const { data: loans, isLoading: loansLoading } = useQuery<Loan[]>({
+    queryKey: ["/api/loans"],
+  });
+
+  const { data: books } = useQuery<Book[]>({
+    queryKey: ["/api/books"],
+  });
+
+  const { data: members } = useQuery<Member[]>({
+    queryKey: ["/api/members"],
+  });
+
+  const form = useForm({
+    resolver: zodResolver(insertLoanSchema),
+    defaultValues: {
+      bookId: 0,
+      memberId: 0,
+      loanDate: new Date().toISOString(),
+      dueDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(), // 14 days from now
+    },
+  });
+
+  const createMutation = useMutation({
+    mutationFn: async (data: typeof form.getValues) => {
+      await apiRequest("POST", "/api/loans", data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/loans"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/books"] });
+      toast({ title: "Loan created successfully" });
+      setIsDialogOpen(false);
+      form.reset();
+    },
+  });
+
+  const returnMutation = useMutation({
+    mutationFn: async (id: number) => {
+      await apiRequest("PATCH", `/api/loans/${id}`, {
+        returnDate: new Date().toISOString(),
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/loans"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/books"] });
+      toast({ title: "Book returned successfully" });
+    },
+  });
+
+  const onSubmit = (data: typeof form.getValues) => {
+    createMutation.mutate(data);
+  };
+
+  const handleReturn = async (id: number) => {
+    if (confirm("Confirm book return?")) {
+      returnMutation.mutate(id);
+    }
+  };
+
+  const availableBooks = books?.filter((book) => book.available) || [];
+  
+  return (
+    <Layout>
+      <div className="space-y-8">
+        <div className="flex justify-between items-center">
+          <h1 className="text-3xl font-bold">Loans</h1>
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogTrigger asChild>
+              <Button>
+                <Plus className="mr-2 h-4 w-4" />
+                New Loan
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Create New Loan</DialogTitle>
+              </DialogHeader>
+              <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                  <FormField
+                    control={form.control}
+                    name="bookId"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Book</FormLabel>
+                        <Select
+                          onValueChange={(value) => field.onChange(parseInt(value))}
+                          defaultValue={field.value.toString()}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select a book" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {availableBooks.map((book) => (
+                              <SelectItem key={book.id} value={book.id.toString()}>
+                                {book.title}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="memberId"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Member</FormLabel>
+                        <Select
+                          onValueChange={(value) => field.onChange(parseInt(value))}
+                          defaultValue={field.value.toString()}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select a member" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {members?.map((member) => (
+                              <SelectItem key={member.id} value={member.id.toString()}>
+                                {member.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <Button type="submit" className="w-full">Create Loan</Button>
+                </form>
+              </Form>
+            </DialogContent>
+          </Dialog>
+        </div>
+
+        {loansLoading ? (
+          <div>Loading...</div>
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Book</TableHead>
+                <TableHead>Member</TableHead>
+                <TableHead>Loan Date</TableHead>
+                <TableHead>Due Date</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {loans?.map((loan) => {
+                const book = books?.find((b) => b.id === loan.bookId);
+                const member = members?.find((m) => m.id === loan.memberId);
+                const isOverdue = !loan.returnDate && new Date(loan.dueDate) < new Date();
+
+                return (
+                  <TableRow key={loan.id}>
+                    <TableCell>{book?.title}</TableCell>
+                    <TableCell>{member?.name}</TableCell>
+                    <TableCell>{format(new Date(loan.loanDate), "MMM d, yyyy")}</TableCell>
+                    <TableCell>{format(new Date(loan.dueDate), "MMM d, yyyy")}</TableCell>
+                    <TableCell>
+                      <span
+                        className={`px-2 py-1 rounded-full text-xs ${
+                          loan.returnDate
+                            ? "bg-green-100 text-green-800"
+                            : isOverdue
+                            ? "bg-red-100 text-red-800"
+                            : "bg-yellow-100 text-yellow-800"
+                        }`}
+                      >
+                        {loan.returnDate
+                          ? "Returned"
+                          : isOverdue
+                          ? "Overdue"
+                          : "Active"}
+                      </span>
+                    </TableCell>
+                    <TableCell>
+                      {!loan.returnDate && (
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={() => handleReturn(loan.id)}
+                        >
+                          <CheckCircle className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        )}
+      </div>
+    </Layout>
+  );
+}
