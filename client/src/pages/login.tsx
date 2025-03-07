@@ -13,9 +13,11 @@ const loginSchema = z.object({
   password: z.string().min(1, "Password is required"),
 });
 
+type LoginForm = z.infer<typeof loginSchema>;
+
 export default function Login() {
   const { toast } = useToast();
-  const form = useForm<z.infer<typeof loginSchema>>({
+  const form = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
       username: "",
@@ -23,7 +25,7 @@ export default function Login() {
     },
   });
 
-  const onSubmit = async (values: z.infer<typeof loginSchema>) => {
+  const onSubmit = async (values: LoginForm) => {
     try {
       await login(values.username, values.password);
       window.location.href = "/dashboard";
@@ -52,7 +54,7 @@ export default function Login() {
                   <FormItem>
                     <FormLabel>Username</FormLabel>
                     <FormControl>
-                      <Input {...field} />
+                      <Input {...field} placeholder="Enter your username" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -65,14 +67,14 @@ export default function Login() {
                   <FormItem>
                     <FormLabel>Password</FormLabel>
                     <FormControl>
-                      <Input type="password" {...field} />
+                      <Input type="password" {...field} placeholder="Enter your password" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-              <Button type="submit" className="w-full">
-                Login
+              <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
+                {form.formState.isSubmitting ? "Logging in..." : "Login"}
               </Button>
             </form>
           </Form>
