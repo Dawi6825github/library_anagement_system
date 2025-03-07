@@ -91,6 +91,16 @@ export default function Loans() {
     }
   };
 
+  const handleNewLoan = () => {
+    form.reset({
+      bookId: 0,
+      memberId: 0,
+      loanDate: new Date().toISOString(),
+      dueDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
+    });
+    setIsDialogOpen(true);
+  };
+
   const availableBooks = books?.filter((book) => book.available) || [];
 
   if (loansLoading) {
@@ -106,26 +116,21 @@ export default function Loans() {
       <div className="space-y-8">
         <div className="flex justify-between items-center">
           <h1 className="text-3xl font-bold">Loans</h1>
+          <Button 
+            onClick={handleNewLoan}
+            disabled={availableBooks.length === 0 || !members?.length}
+            title={
+              availableBooks.length === 0 
+                ? "No books available for loan" 
+                : !members?.length 
+                ? "No members available"
+                : "Create new loan"
+            }
+          >
+            <Plus className="mr-2 h-4 w-4" />
+            New Loan
+          </Button>
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger asChild>
-              <Button 
-                onClick={() => {
-                  form.reset();
-                  setIsDialogOpen(true);
-                }}
-                disabled={availableBooks.length === 0 || !members?.length}
-                title={
-                  availableBooks.length === 0 
-                    ? "No books available for loan" 
-                    : !members?.length 
-                    ? "No members available"
-                    : "Create new loan"
-                }
-              >
-                <Plus className="mr-2 h-4 w-4" />
-                New Loan
-              </Button>
-            </DialogTrigger>
             <DialogContent>
               <DialogHeader>
                 <DialogTitle>Create New Loan</DialogTitle>
