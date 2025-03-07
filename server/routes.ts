@@ -14,6 +14,11 @@ declare module "express-session" {
 
 export async function registerRoutes(app: Express) {
   const httpServer = createServer(app);
+  
+  // Healthcheck endpoint
+  app.get('/api/healthcheck', (req, res) => {
+    res.json({ status: 'ok', message: 'Server is running' });
+  });
 
   // Session setup
   app.use(

@@ -64,7 +64,7 @@ app.use((req, res, next) => {
       host: "0.0.0.0",
       reusePort: true,
     }, () => {
-      log(`serving on port ${port}`);
+      log(`serving on port ${port} at http://0.0.0.0:${port}`);
     }).on('error', (err) => {
       if (err.code === 'EADDRINUSE') {
         log(`Port ${port} is in use, trying ${port + 1}`);
