@@ -1,3 +1,4 @@
+
 import * as React from "react"
 import * as DialogPrimitive from "@radix-ui/react-dialog"
 import { X } from "lucide-react"
@@ -106,6 +107,22 @@ const DialogDescription = React.forwardRef<
 ))
 DialogDescription.displayName = DialogPrimitive.Description.displayName
 
+// Create DialogContext for accessibility
+type DialogContextValue = {
+  titleId: string;
+  descriptionId: string;
+};
+
+const DialogContext = React.createContext<DialogContextValue | null>(null);
+
+export function useDialogContext() {
+  const context = React.useContext(DialogContext);
+  if (!context) {
+    throw new Error("useDialogContext must be used within a DialogProvider");
+  }
+  return context;
+}
+
 export {
   Dialog,
   DialogPortal,
@@ -117,30 +134,5 @@ export {
   DialogFooter,
   DialogTitle,
   DialogDescription,
-}
-export function DialogDescription({
-  className,
-  children,
-  ...props
-}: React.HTMLAttributes<HTMLParagraphElement>) {
-  const { descriptionId } = useDialogContext()
-
-  return (
-    <p
-      id={descriptionId}
-      className={cn("text-sm text-muted-foreground", className)}
-      {...props}
-    >
-      {children}
-    </p>
-  )
-}
-const DialogContext = React.createContext<DialogContextValue | null>(null)
-
-export function useDialogContext() {
-  const context = React.useContext(DialogContext)
-  if (!context) {
-    throw new Error("useDialogContext must be used within a DialogProvider")
-  }
-  return context
+  DialogContext
 }
