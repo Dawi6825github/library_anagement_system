@@ -3,7 +3,7 @@ import { Layout } from "@/components/layout";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Book, Member, Loan } from "@shared/schema";
+import { Book, Member, Loan, insertLoanSchema } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -15,10 +15,10 @@ import { Plus, CheckCircle } from "lucide-react";
 import { format } from "date-fns";
 import * as z from 'zod';
 
-// Define the form schema
+// Create a form schema that matches the loan schema
 const createLoanSchema = z.object({
   bookId: z.coerce.number().min(1, "Please select a book"),
-  memberId: z.coerce.number().min(1, "Please select a member"),
+  memberId: z.coerce.number().min(1, "Please select a member")
 });
 
 type CreateLoanForm = z.infer<typeof createLoanSchema>;
@@ -52,15 +52,16 @@ export default function Loans() {
   // Mutations
   const createMutation = useMutation({
     mutationFn: async (data: CreateLoanForm) => {
-      const loanDate = new Date();
-      const dueDate = new Date();
-      dueDate.setDate(dueDate.getDate() + 14); // 14 days from now
-
-      await apiRequest("POST", "/api/loans", {
+      const loanData = {
         ...data,
-        loanDate: loanDate.toISOString(),
-        dueDate: dueDate.toISOString(),
-      });
+        loanDate: new Date().toISOString(),
+        dueDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(), // 14 days from now
+      };
+
+      console.log('Submitting loan data:', loanData); // Debug log
+
+      const response = await apiRequest("POST", "/api/loans", loanData);
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/loans"] });
@@ -70,6 +71,7 @@ export default function Loans() {
       form.reset();
     },
     onError: (error: Error) => {
+      console.error('Loan creation error:', error); // Debug log
       toast({
         title: "Failed to create loan",
         description: error.message,
@@ -120,7 +122,6 @@ export default function Loans() {
 
   const availableBooks = books?.filter((book) => book.available) || [];
 
-  // Loading State
   if (loansLoading) {
     return (
       <Layout>
@@ -164,7 +165,7 @@ export default function Loans() {
                         <FormLabel>Book</FormLabel>
                         <Select
                           onValueChange={field.onChange}
-                          value={field.value?.toString() || "0"} //Added default value to handle initial state
+                          value={field.value?.toString() || "0"}
                         >
                           <FormControl>
                             <SelectTrigger>
@@ -193,7 +194,7 @@ export default function Loans() {
                         <FormLabel>Member</FormLabel>
                         <Select
                           onValueChange={field.onChange}
-                          value={field.value?.toString() || "0"} //Added default value to handle initial state
+                          value={field.value?.toString() || "0"}
                         >
                           <FormControl>
                             <SelectTrigger>
