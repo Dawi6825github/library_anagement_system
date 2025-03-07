@@ -13,6 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Plus, CheckCircle } from "lucide-react";
 import { format } from "date-fns";
+import * as z from 'zod';
 
 export default function Loans() {
   const { toast } = useToast();
@@ -30,7 +31,7 @@ export default function Loans() {
     queryKey: ["/api/members"],
   });
 
-  const form = useForm({
+  const form = useForm<z.infer<typeof insertLoanSchema>>({
     resolver: zodResolver(insertLoanSchema),
     defaultValues: {
       bookId: 0,
@@ -41,7 +42,7 @@ export default function Loans() {
   });
 
   const createMutation = useMutation({
-    mutationFn: async (data: typeof form.getValues) => {
+    mutationFn: async (data: z.infer<typeof insertLoanSchema>) => {
       await apiRequest("POST", "/api/loans", data);
     },
     onSuccess: () => {
@@ -51,6 +52,13 @@ export default function Loans() {
       setIsDialogOpen(false);
       form.reset();
     },
+    onError: (error) => {
+      toast({ 
+        title: "Failed to create loan",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
   });
 
   const returnMutation = useMutation({
@@ -64,9 +72,16 @@ export default function Loans() {
       queryClient.invalidateQueries({ queryKey: ["/api/books"] });
       toast({ title: "Book returned successfully" });
     },
+    onError: (error) => {
+      toast({ 
+        title: "Failed to return book",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
   });
 
-  const onSubmit = (data: typeof form.getValues) => {
+  const onSubmit = (data: z.infer<typeof insertLoanSchema>) => {
     createMutation.mutate(data);
   };
 
@@ -77,7 +92,15 @@ export default function Loans() {
   };
 
   const availableBooks = books?.filter((book) => book.available) || [];
-  
+
+  if (loansLoading) {
+    return (
+      <Layout>
+        <div>Loading...</div>
+      </Layout>
+    );
+  }
+
   return (
     <Layout>
       <div className="space-y-8">
@@ -85,7 +108,7 @@ export default function Loans() {
           <h1 className="text-3xl font-bold">Loans</h1>
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
-              <Button>
+              <Button disabled={createMutation.isPending}>
                 <Plus className="mr-2 h-4 w-4" />
                 New Loan
               </Button>
@@ -104,7 +127,7 @@ export default function Loans() {
                         <FormLabel>Book</FormLabel>
                         <Select
                           onValueChange={(value) => field.onChange(parseInt(value))}
-                          defaultValue={field.value.toString()}
+                          value={field.value?.toString()}
                         >
                           <FormControl>
                             <SelectTrigger>
@@ -131,7 +154,7 @@ export default function Loans() {
                         <FormLabel>Member</FormLabel>
                         <Select
                           onValueChange={(value) => field.onChange(parseInt(value))}
-                          defaultValue={field.value.toString()}
+                          value={field.value?.toString()}
                         >
                           <FormControl>
                             <SelectTrigger>
@@ -150,73 +173,83 @@ export default function Loans() {
                       </FormItem>
                     )}
                   />
-                  <Button type="submit" className="w-full">Create Loan</Button>
+                  <Button 
+                    type="submit" 
+                    className="w-full"
+                    disabled={createMutation.isPending}
+                  >
+                    {createMutation.isPending ? "Creating..." : "Create Loan"}
+                  </Button>
                 </form>
               </Form>
             </DialogContent>
           </Dialog>
         </div>
 
-        {loansLoading ? (
-          <div>Loading...</div>
-        ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Book</TableHead>
-                <TableHead>Member</TableHead>
-                <TableHead>Loan Date</TableHead>
-                <TableHead>Due Date</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {loans?.map((loan) => {
-                const book = books?.find((b) => b.id === loan.bookId);
-                const member = members?.find((m) => m.id === loan.memberId);
-                const isOverdue = !loan.returnDate && new Date(loan.dueDate) < new Date();
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Book</TableHead>
+              <TableHead>Member</TableHead>
+              <TableHead>Loan Date</TableHead>
+              <TableHead>Due Date</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {loans?.map((loan) => {
+              const book = books?.find((b) => b.id === loan.bookId);
+              const member = members?.find((m) => m.id === loan.memberId);
+              const isOverdue = !loan.returnDate && new Date(loan.dueDate) < new Date();
 
-                return (
-                  <TableRow key={loan.id}>
-                    <TableCell>{book?.title}</TableCell>
-                    <TableCell>{member?.name}</TableCell>
-                    <TableCell>{format(new Date(loan.loanDate), "MMM d, yyyy")}</TableCell>
-                    <TableCell>{format(new Date(loan.dueDate), "MMM d, yyyy")}</TableCell>
-                    <TableCell>
-                      <span
-                        className={`px-2 py-1 rounded-full text-xs ${
-                          loan.returnDate
-                            ? "bg-green-100 text-green-800"
-                            : isOverdue
-                            ? "bg-red-100 text-red-800"
-                            : "bg-yellow-100 text-yellow-800"
-                        }`}
-                      >
-                        {loan.returnDate
-                          ? "Returned"
+              return (
+                <TableRow key={loan.id}>
+                  <TableCell>{book?.title}</TableCell>
+                  <TableCell>{member?.name}</TableCell>
+                  <TableCell>{format(new Date(loan.loanDate), "MMM d, yyyy")}</TableCell>
+                  <TableCell>{format(new Date(loan.dueDate), "MMM d, yyyy")}</TableCell>
+                  <TableCell>
+                    <span
+                      className={`px-2 py-1 rounded-full text-xs ${
+                        loan.returnDate
+                          ? "bg-green-100 text-green-800"
                           : isOverdue
-                          ? "Overdue"
-                          : "Active"}
-                      </span>
-                    </TableCell>
-                    <TableCell>
-                      {!loan.returnDate && (
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          onClick={() => handleReturn(loan.id)}
-                        >
-                          <CheckCircle className="h-4 w-4" />
-                        </Button>
-                      )}
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-        )}
+                          ? "bg-red-100 text-red-800"
+                          : "bg-yellow-100 text-yellow-800"
+                      }`}
+                    >
+                      {loan.returnDate
+                        ? "Returned"
+                        : isOverdue
+                        ? "Overdue"
+                        : "Active"}
+                    </span>
+                  </TableCell>
+                  <TableCell>
+                    {!loan.returnDate && (
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={() => handleReturn(loan.id)}
+                        disabled={returnMutation.isPending}
+                      >
+                        <CheckCircle className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </TableCell>
+                </TableRow>
+              );
+            })}
+            {loans?.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={6} className="text-center py-4">
+                  No loans found
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
       </div>
     </Layout>
   );
