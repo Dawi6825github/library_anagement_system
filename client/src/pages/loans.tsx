@@ -34,8 +34,8 @@ export default function Loans() {
   const form = useForm<z.infer<typeof insertLoanSchema>>({
     resolver: zodResolver(insertLoanSchema),
     defaultValues: {
-      bookId: 0,
-      memberId: 0,
+      bookId: undefined,
+      memberId: undefined,
       loanDate: new Date().toISOString(),
       dueDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(), // 14 days from now
     },
@@ -53,7 +53,7 @@ export default function Loans() {
       form.reset();
     },
     onError: (error) => {
-      toast({ 
+      toast({
         title: "Failed to create loan",
         description: error.message,
         variant: "destructive"
@@ -73,7 +73,7 @@ export default function Loans() {
       toast({ title: "Book returned successfully" });
     },
     onError: (error) => {
-      toast({ 
+      toast({
         title: "Failed to return book",
         description: error.message,
         variant: "destructive"
@@ -108,7 +108,10 @@ export default function Loans() {
           <h1 className="text-3xl font-bold">Loans</h1>
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
-              <Button disabled={createMutation.isPending}>
+              <Button 
+                disabled={createMutation.isPending || !availableBooks.length}
+                title={!availableBooks.length ? "No books available for loan" : ""}
+              >
                 <Plus className="mr-2 h-4 w-4" />
                 New Loan
               </Button>
