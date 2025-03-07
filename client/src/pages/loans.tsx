@@ -15,7 +15,12 @@ import { Plus, CheckCircle } from "lucide-react";
 import { format } from "date-fns";
 import * as z from 'zod';
 
-type LoanFormData = z.infer<typeof insertLoanSchema>;
+const loanFormSchema = insertLoanSchema.extend({
+  bookId: z.number().min(1, "Please select a book"),
+  memberId: z.number().min(1, "Please select a member"),
+});
+
+type LoanFormData = z.infer<typeof loanFormSchema>;
 
 export default function Loans() {
   const { toast } = useToast();
@@ -34,19 +39,22 @@ export default function Loans() {
   });
 
   const form = useForm<LoanFormData>({
-    resolver: zodResolver(insertLoanSchema),
+    resolver: zodResolver(loanFormSchema),
     defaultValues: {
       bookId: 0,
       memberId: 0,
       loanDate: new Date().toISOString(),
-      dueDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(), // 14 days from now
+      dueDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
     },
   });
 
   const createMutation = useMutation({
     mutationFn: async (data: LoanFormData) => {
-      const response = await apiRequest("POST", "/api/loans", data);
-      return response.json();
+      return await apiRequest("POST", "/api/loans", {
+        ...data,
+        loanDate: new Date(data.loanDate).toISOString(),
+        dueDate: new Date(data.dueDate).toISOString(),
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/loans"] });
@@ -84,16 +92,11 @@ export default function Loans() {
     }
   });
 
-  const onSubmit = (data: LoanFormData) => {
+  const onSubmit = async (data: LoanFormData) => {
     try {
-      createMutation.mutate(data);
+      await createMutation.mutateAsync(data);
     } catch (error) {
       console.error("Form submission error:", error);
-      toast({
-        title: "Error",
-        description: "Failed to submit form",
-        variant: "destructive"
-      });
     }
   };
 
@@ -157,7 +160,7 @@ export default function Loans() {
                         <FormLabel>Book</FormLabel>
                         <Select
                           onValueChange={(value) => field.onChange(parseInt(value))}
-                          value={field.value?.toString()}
+                          value={field.value?.toString() || ""}
                         >
                           <FormControl>
                             <SelectTrigger>
@@ -184,7 +187,7 @@ export default function Loans() {
                         <FormLabel>Member</FormLabel>
                         <Select
                           onValueChange={(value) => field.onChange(parseInt(value))}
-                          value={field.value?.toString()}
+                          value={field.value?.toString() || ""}
                         >
                           <FormControl>
                             <SelectTrigger>
