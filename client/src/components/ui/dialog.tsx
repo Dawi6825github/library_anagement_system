@@ -74,26 +74,6 @@ const DialogFooter = ({
       "flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2",
       className
     )}
-
-// Add this if it doesn't exist in your dialog components
-export function DialogDescription({
-  className,
-  children,
-  ...props
-}: React.HTMLAttributes<HTMLParagraphElement>) {
-  const { descriptionId } = useDialogContext()
-
-  return (
-    <p
-      id={descriptionId}
-      className={cn("text-sm text-muted-foreground", className)}
-      {...props}
-    >
-      {children}
-    </p>
-  )
-}
-
     {...props}
   />
 )
