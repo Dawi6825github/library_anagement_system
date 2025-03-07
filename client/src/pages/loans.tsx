@@ -3,7 +3,7 @@ import { Layout } from "@/components/layout";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Book, Member, Loan, insertLoanSchema } from "@shared/schema";
+import { Book, Member, Loan } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -15,17 +15,19 @@ import { Plus, CheckCircle } from "lucide-react";
 import { format } from "date-fns";
 import * as z from 'zod';
 
-const loanFormSchema = insertLoanSchema.extend({
-  bookId: z.number().min(1, "Please select a book"),
-  memberId: z.number().min(1, "Please select a member"),
+// Define the form schema
+const createLoanSchema = z.object({
+  bookId: z.coerce.number().min(1, "Please select a book"),
+  memberId: z.coerce.number().min(1, "Please select a member"),
 });
 
-type LoanFormData = z.infer<typeof loanFormSchema>;
+type CreateLoanForm = z.infer<typeof createLoanSchema>;
 
 export default function Loans() {
   const { toast } = useToast();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
+  // Queries
   const { data: loans, isLoading: loansLoading } = useQuery<Loan[]>({
     queryKey: ["/api/loans"],
   });
@@ -38,22 +40,26 @@ export default function Loans() {
     queryKey: ["/api/members"],
   });
 
-  const form = useForm<LoanFormData>({
-    resolver: zodResolver(loanFormSchema),
+  // Form
+  const form = useForm<CreateLoanForm>({
+    resolver: zodResolver(createLoanSchema),
     defaultValues: {
       bookId: 0,
       memberId: 0,
-      loanDate: new Date().toISOString(),
-      dueDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
     },
   });
 
+  // Mutations
   const createMutation = useMutation({
-    mutationFn: async (data: LoanFormData) => {
-      return await apiRequest("POST", "/api/loans", {
+    mutationFn: async (data: CreateLoanForm) => {
+      const loanDate = new Date();
+      const dueDate = new Date();
+      dueDate.setDate(dueDate.getDate() + 14); // 14 days from now
+
+      await apiRequest("POST", "/api/loans", {
         ...data,
-        loanDate: new Date(data.loanDate).toISOString(),
-        dueDate: new Date(data.dueDate).toISOString(),
+        loanDate: loanDate.toISOString(),
+        dueDate: dueDate.toISOString(),
       });
     },
     onSuccess: () => {
@@ -92,7 +98,8 @@ export default function Loans() {
     }
   });
 
-  const onSubmit = async (data: LoanFormData) => {
+  // Event Handlers
+  const onSubmit = async (data: CreateLoanForm) => {
     try {
       await createMutation.mutateAsync(data);
     } catch (error) {
@@ -107,17 +114,13 @@ export default function Loans() {
   };
 
   const handleNewLoan = () => {
-    form.reset({
-      bookId: 0,
-      memberId: 0,
-      loanDate: new Date().toISOString(),
-      dueDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
-    });
+    form.reset();
     setIsDialogOpen(true);
   };
 
   const availableBooks = books?.filter((book) => book.available) || [];
 
+  // Loading State
   if (loansLoading) {
     return (
       <Layout>
@@ -145,6 +148,7 @@ export default function Loans() {
             <Plus className="mr-2 h-4 w-4" />
             New Loan
           </Button>
+
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogContent>
               <DialogHeader>
@@ -159,8 +163,8 @@ export default function Loans() {
                       <FormItem>
                         <FormLabel>Book</FormLabel>
                         <Select
-                          onValueChange={(value) => field.onChange(parseInt(value))}
-                          value={field.value?.toString() || ""}
+                          onValueChange={field.onChange}
+                          value={field.value?.toString() || "0"} //Added default value to handle initial state
                         >
                           <FormControl>
                             <SelectTrigger>
@@ -168,6 +172,7 @@ export default function Loans() {
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
+                            <SelectItem value="0">Select a book</SelectItem>
                             {availableBooks.map((book) => (
                               <SelectItem key={book.id} value={book.id.toString()}>
                                 {book.title}
@@ -179,6 +184,7 @@ export default function Loans() {
                       </FormItem>
                     )}
                   />
+
                   <FormField
                     control={form.control}
                     name="memberId"
@@ -186,8 +192,8 @@ export default function Loans() {
                       <FormItem>
                         <FormLabel>Member</FormLabel>
                         <Select
-                          onValueChange={(value) => field.onChange(parseInt(value))}
-                          value={field.value?.toString() || ""}
+                          onValueChange={field.onChange}
+                          value={field.value?.toString() || "0"} //Added default value to handle initial state
                         >
                           <FormControl>
                             <SelectTrigger>
@@ -195,6 +201,7 @@ export default function Loans() {
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
+                            <SelectItem value="0">Select a member</SelectItem>
                             {members?.map((member) => (
                               <SelectItem key={member.id} value={member.id.toString()}>
                                 {member.name}
@@ -206,6 +213,7 @@ export default function Loans() {
                       </FormItem>
                     )}
                   />
+
                   <Button 
                     type="submit" 
                     className="w-full"
