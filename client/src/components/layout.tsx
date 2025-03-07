@@ -36,23 +36,23 @@ export function Layout({ children }: LayoutProps) {
           </div>
           <div className="flex-1 px-4">
             <div className="space-y-2">
-              <NavLink href="/dashboard" active={location === "/dashboard"}>
+              <NavLink to="/dashboard" active={location === "/dashboard"}>
                 <LayoutDashboard className="h-4 w-4 mr-2" />
                 Dashboard
               </NavLink>
-              <NavLink href="/books" active={location === "/books"}>
+              <NavLink to="/books" active={location === "/books"}>
                 <BookOpen className="h-4 w-4 mr-2" />
                 Books
               </NavLink>
-              <NavLink href="/members" active={location === "/members"}>
+              <NavLink to="/members" active={location === "/members"}>
                 <Users className="h-4 w-4 mr-2" />
                 Members
               </NavLink>
-              <NavLink href="/loans" active={location === "/loans"}>
+              <NavLink to="/loans" active={location === "/loans"}>
                 <BookmarkCheck className="h-4 w-4 mr-2" />
                 Loans
               </NavLink>
-              <NavLink href="/reports" active={location === "/reports"}>
+              <NavLink to="/reports" active={location === "/reports"}>
                 <FileText className="h-4 w-4 mr-2" />
                 Reports
               </NavLink>

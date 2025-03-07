@@ -139,14 +139,27 @@ export class MemStorage implements IStorage {
 
   async createLoan(insertLoan: InsertLoan): Promise<Loan> {
     const id = this.currentIds.loans++;
+    
+    // Validate book exists and is available
+    const book = this.books.get(insertLoan.bookId);
+    if (!book) {
+      throw new Error(`Book with ID ${insertLoan.bookId} not found`);
+    }
+    if (!book.available) {
+      throw new Error(`Book with ID ${insertLoan.bookId} is not available for loan`);
+    }
+    
+    // Validate member exists
+    const member = this.members.get(insertLoan.memberId);
+    if (!member) {
+      throw new Error(`Member with ID ${insertLoan.memberId} not found`);
+    }
+    
     const loan = { ...insertLoan, id, returnDate: null };
     this.loans.set(id, loan);
 
     // Mark book as unavailable
-    const book = this.books.get(insertLoan.bookId);
-    if (book) {
-      this.books.set(book.id, { ...book, available: false });
-    }
+    this.books.set(book.id, { ...book, available: false });
 
     return loan;
   }

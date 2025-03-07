@@ -167,10 +167,27 @@ export async function registerRoutes(app: Express) {
   app.post("/api/loans", requireAuth, async (req, res) => {
     try {
       const loan = insertLoanSchema.parse(req.body);
+      
+      // Check if book exists and is available
+      const book = await storage.getBook(loan.bookId);
+      if (!book) {
+        return res.status(404).json({ message: "Book not found" });
+      }
+      if (!book.available) {
+        return res.status(400).json({ message: "Book is not available" });
+      }
+      
+      // Check if member exists
+      const member = await storage.getMember(loan.memberId);
+      if (!member) {
+        return res.status(404).json({ message: "Member not found" });
+      }
+      
       const created = await storage.createLoan(loan);
       res.json(created);
     } catch (err) {
-      res.status(400).json({ message: "Invalid loan data" });
+      console.error("Loan creation error:", err);
+      res.status(400).json({ message: "Invalid loan data", error: err instanceof Error ? err.message : String(err) });
     }
   });
 
