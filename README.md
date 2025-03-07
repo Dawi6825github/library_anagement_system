@@ -1,54 +1,93 @@
-Challenge: Develop a Simple Library Management System with Custom API Using Express.js
-Create a basic library management system with a custom API using Express.js. This system will manage books, members, and loans in a library. The goal is to assess your ability to build a full-stack application with Express.js and demonstrate your understanding of API development, integration, and front-end implementation capabilities.
+Library Management System with Custom API Using Express.js
+Challenge Overview
+This project involves developing a Library Management System with a custom API using Express.js. The system will manage books, members, and loans in a library. The objective is to assess your ability to build a full-stack application with Express.js and demonstrate your knowledge of API development, integration, and front-end implementation.
 
 Core Features
-Book Management
-Create a Book model with fields like Title, Author, Publish Date, and ISBN.
-Implement CRUD operations (Create, Read, Update, Delete) for books using Express.js and a database (MongoDB, PostgreSQL, or MySQL).
-Membership Management
-Create a Member model with fields like Name, Membership ID, Email, and Phone Number.
+1. Book Management
+Create a Book model with fields such as:
+Title
+Author
+Publish Date
+ISBN
+Implement CRUD operations (Create, Read, Update, Delete) for books using Express.js and a database of your choice (MongoDB, PostgreSQL, or MySQL).
+2. Membership Management
+Create a Member model with fields such as:
+Name
+Membership ID
+Email
+Phone Number
 Implement CRUD operations for managing members.
-Loan Management
-Create a Loan model to track book loans.
-Include fields for Member, Book, Loan Date, and Return Date.
+3. Loan Management
+Create a Loan model to track book loans with fields for:
+Member
+Book
+Loan Date
+Return Date
 Implement functionality to check book availability before issuing a loan.
-User Interface
+4. User Interface
 Develop interactive forms for data entry and display.
-Include validation checks to ensure data integrity.
-Reports
-Generate a report of all currently loaned books.
-Create a report for overdue books based on loan dates.
-Custom API Development
-Develop a REST API using Express.js to allow external applications to interact with the library system.
+Include validation checks to ensure data integrity and consistency.
+5. Reports
+Generate reports for:
+Currently loaned books.
+Overdue books based on loan dates.
+6. Custom API Development
+Develop a REST API with Express.js to allow external applications to interact with your library system.
 The API should support:
 Adding, retrieving, updating, and deleting books and members.
 Checking book availability and loan status.
-Implement JWT authentication to secure access to the API.
-Front-End Implementation
-Develop a user login interface requiring users to log in using their email/username and password.
+Implement JWT authentication to secure API access.
+7. Front-End Implementation
+Develop a user login interface that requires email/username and password.
 Once logged in, users should be able to:
 View a list of available library books.
 View details of each book.
 Loan a book through the system.
-Advanced Features
+8. Advanced Features
 Automated email reminders for overdue books.
 Book reservation feature for members.
 Role-based authentication (Admin, Librarian, Member).
 Setup and Demonstration
-The application must be developed using Express.js, Node.js, and a database of your choice (MongoDB, PostgreSQL, or MySQL).
-Your code should be clean, well-commented, and follow best practices.
-Publish your Express.js project to a public GitHub repository with a README file containing setup instructions.
-Do not include unnecessary dependencies or environment files in the repo.
+Prerequisites
+Node.js and npm (Node Package Manager) must be installed on your system.
+A database of your choice (MongoDB, PostgreSQL, or MySQL).
+Steps to Set Up
+Clone the repository:
+
+bash
+Copy
+Edit
+git clone https://github.com/yourusername/library-management-system.git
+Install dependencies: Navigate to the project directory and run:
+
+bash
+Copy
+Edit
+npm install
+Set up the database:
+
+Create a database of your choice (MongoDB, PostgreSQL, or MySQL).
+Update the database connection settings in the .env file (create this file if not already present).
+Start the application:
+
+bash
+Copy
+Edit
+npm start
+The API should now be accessible at http://localhost:5000.
+
 Demo Setup Options
 You have two options to present your project:
-A. Deploy your application on a free hosting service (e.g., Vercel, Render, or Heroku) and provide the URL.
-B. Set up the application on your local machine for an in-office demonstration.
+
+Option A: Deploy your application on a free hosting service (e.g., Vercel, Render, or Heroku) and provide the URL for access.
+
+Option B: Set up the application on your local machine for an in-office demonstration.
 
 Evaluation Criteria
-Functionality and completeness of required features.
-Code quality and project organization.
-Effectiveness of the API (performance, security, and usability).
-UI design and ease of navigation.
-Adherence to best practices in Express.js development.
+Functionality: Completeness of required features and whether they work as expected.
+Code Quality: Clean, well-commented code following best practices.
+API Effectiveness: Performance, security, and usability of the API.
+UI Design: Usability and ease of navigation.
+Adherence to Best Practices: Express.js development standards and project organization.
 Next Steps
-Once your application is ready, contact our office to schedule a live demonstration.
+Once your application is ready, contact me to schedule a live demonstration. We look forward to seeing your work!
