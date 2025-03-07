@@ -56,7 +56,7 @@ app.use((req, res, next) => {
     serveStatic(app);
   }
 
-  // Try to serve the app on port 5000, fallback to another port if needed
+  // Try to serve the app on port 3000, fallback to another port if needed
   // this serves both the API and the client
   const tryPort = (port) => {
     server.listen({
@@ -75,5 +75,5 @@ app.use((req, res, next) => {
     });
   };
   
-  tryPort(5000);
+  tryPort(3000);
 })();

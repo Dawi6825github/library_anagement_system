@@ -187,7 +187,14 @@ export async function registerRoutes(app: Express) {
       res.json(created);
     } catch (err) {
       console.error("Loan creation error:", err);
-      res.status(400).json({ message: "Invalid loan data", error: err instanceof Error ? err.message : String(err) });
+      // Provide more detailed error message
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      const message = errorMessage.includes("bookId") ? "Invalid book ID" :
+                      errorMessage.includes("memberId") ? "Invalid member ID" :
+                      errorMessage.includes("dueDate") ? "Invalid due date" :
+                      "Invalid loan data";
+      
+      res.status(400).json({ message, details: errorMessage });
     }
   });
 
