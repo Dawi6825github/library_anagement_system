@@ -118,3 +118,29 @@ export {
   DialogTitle,
   DialogDescription,
 }
+export function DialogDescription({
+  className,
+  children,
+  ...props
+}: React.HTMLAttributes<HTMLParagraphElement>) {
+  const { descriptionId } = useDialogContext()
+
+  return (
+    <p
+      id={descriptionId}
+      className={cn("text-sm text-muted-foreground", className)}
+      {...props}
+    >
+      {children}
+    </p>
+  )
+}
+const DialogContext = React.createContext<DialogContextValue | null>(null)
+
+export function useDialogContext() {
+  const context = React.useContext(DialogContext)
+  if (!context) {
+    throw new Error("useDialogContext must be used within a DialogProvider")
+  }
+  return context
+}
