@@ -34,8 +34,8 @@ export default function Loans() {
   const form = useForm<z.infer<typeof insertLoanSchema>>({
     resolver: zodResolver(insertLoanSchema),
     defaultValues: {
-      bookId: undefined,
-      memberId: undefined,
+      bookId: 0,
+      memberId: 0,
       loanDate: new Date().toISOString(),
       dueDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(), // 14 days from now
     },
@@ -109,8 +109,18 @@ export default function Loans() {
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
               <Button 
-                disabled={createMutation.isPending || !availableBooks.length}
-                title={!availableBooks.length ? "No books available for loan" : ""}
+                onClick={() => {
+                  form.reset();
+                  setIsDialogOpen(true);
+                }}
+                disabled={availableBooks.length === 0 || !members?.length}
+                title={
+                  availableBooks.length === 0 
+                    ? "No books available for loan" 
+                    : !members?.length 
+                    ? "No members available"
+                    : "Create new loan"
+                }
               >
                 <Plus className="mr-2 h-4 w-4" />
                 New Loan
