@@ -6,7 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Book, Member, Loan, insertLoanSchema } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
@@ -14,6 +14,8 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Plus, CheckCircle } from "lucide-react";
 import { format } from "date-fns";
 import * as z from 'zod';
+
+type LoanFormData = z.infer<typeof insertLoanSchema>;
 
 export default function Loans() {
   const { toast } = useToast();
@@ -31,7 +33,7 @@ export default function Loans() {
     queryKey: ["/api/members"],
   });
 
-  const form = useForm<z.infer<typeof insertLoanSchema>>({
+  const form = useForm<LoanFormData>({
     resolver: zodResolver(insertLoanSchema),
     defaultValues: {
       bookId: 0,
@@ -42,8 +44,9 @@ export default function Loans() {
   });
 
   const createMutation = useMutation({
-    mutationFn: async (data: z.infer<typeof insertLoanSchema>) => {
-      await apiRequest("POST", "/api/loans", data);
+    mutationFn: async (data: LoanFormData) => {
+      const response = await apiRequest("POST", "/api/loans", data);
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/loans"] });
@@ -52,7 +55,7 @@ export default function Loans() {
       setIsDialogOpen(false);
       form.reset();
     },
-    onError: (error) => {
+    onError: (error: Error) => {
       toast({
         title: "Failed to create loan",
         description: error.message,
@@ -72,7 +75,7 @@ export default function Loans() {
       queryClient.invalidateQueries({ queryKey: ["/api/books"] });
       toast({ title: "Book returned successfully" });
     },
-    onError: (error) => {
+    onError: (error: Error) => {
       toast({
         title: "Failed to return book",
         description: error.message,
@@ -81,8 +84,17 @@ export default function Loans() {
     }
   });
 
-  const onSubmit = (data: z.infer<typeof insertLoanSchema>) => {
-    createMutation.mutate(data);
+  const onSubmit = (data: LoanFormData) => {
+    try {
+      createMutation.mutate(data);
+    } catch (error) {
+      console.error("Form submission error:", error);
+      toast({
+        title: "Error",
+        description: "Failed to submit form",
+        variant: "destructive"
+      });
+    }
   };
 
   const handleReturn = async (id: number) => {
