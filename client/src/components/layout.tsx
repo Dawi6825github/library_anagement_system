@@ -73,14 +73,14 @@ export function Layout({ children }: LayoutProps) {
 }
 
 interface NavLinkProps {
-  href: string;
+  to: string;
   active: boolean;
   children: React.ReactNode;
 }
 
-function NavLink({ href, active, children }: NavLinkProps) {
+function NavLink({ to, active, children }: NavLinkProps) {
   return (
-    <Link href={href}>
+    <Link href={to}>
       <a className={`flex items-center px-4 py-2 rounded-md transition-colors ${
         active
           ? "bg-sidebar-accent text-sidebar-accent-foreground"
